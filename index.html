@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Puntos negros en tu ruta | DGT 2016–2024</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!--
+    Servidor local:
+      cd puntos-negros
+      python3 -m http.server 8001
+    http://localhost:8001
+  -->
+
+  <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div id="map"></div>
+
+  <header id="header">
+    <div class="header-titles">
+      <span class="header-title">Calcula los 'puntos negros' en tu ruta</span>
+    </div>
+    <img src="logo_newtral.png" alt="Newtral" class="header-logo" />
+  </header>
+
+  <div id="search-panel" class="search-panel">
+    <div class="search-summary" id="search-summary">
+      <span class="search-summary-text" id="search-summary-text"></span>
+      <button type="button" id="btn-editar-busqueda" class="btn-editar">Editar</button>
+    </div>
+
+    <div class="search-fields" id="search-fields">
+      <div class="search-field">
+        <label for="input-origen">Origen</label>
+        <div class="input-row">
+          <div class="autocomplete-wrap">
+            <input type="text" id="input-origen" placeholder="Dirección o selecciona..." autocomplete="off" />
+            <div class="autocomplete-results" id="results-origen" hidden></div>
+          </div>
+          <button type="button" id="btn-pin-origen" class="btn-pin" title="Elegir origen en el mapa">📌</button>
+        </div>
+      </div>
+
+      <div class="search-field">
+        <label for="input-destino">Destino</label>
+        <div class="input-row">
+          <div class="autocomplete-wrap">
+            <input type="text" id="input-destino" placeholder="Dirección o selecciona..." autocomplete="off" />
+            <div class="autocomplete-results" id="results-destino" hidden></div>
+          </div>
+          <button type="button" id="btn-pin-destino" class="btn-pin" title="Elegir destino en el mapa">📌</button>
+        </div>
+      </div>
+
+      <div class="search-field search-field--inline">
+        <label for="select-buffer">Radio</label>
+        <select id="select-buffer">
+          <option value="200">200 m</option>
+          <option value="500" selected>500 m</option>
+          <option value="1000">1 km</option>
+        </select>
+      </div>
+
+      <div class="botones-row">
+        <button id="btn-buscar" class="btn-primary">Buscar ruta</button>
+        <button type="button" id="btn-limpiar" class="btn-secondary" title="Limpiar y empezar una nueva ruta">✕</button>
+      </div>
+      <div id="search-error" class="search-error" hidden></div>
+    </div>
+  </div>
+
+  <div id="modo-seleccion-hint" class="modo-seleccion-hint" hidden></div>
+
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-box">Cargando histórico de accidentes…</div>
+  </div>
+
+  <div id="resultados-panel" class="resultados-panel" hidden>
+    <button id="btn-cerrar-resultados" class="btn-cerrar">&times;</button>
+    <div class="rp-titulo">Resumen de la ruta</div>
+    <div class="rp-ruta-info" id="rp-ruta-info"></div>
+    <div class="rp-nota" id="rp-nota"></div>
+    <button id="btn-toggle-resto" class="btn-toggle-resto" hidden></button>
+    <div class="rp-stats" id="rp-stats"></div>
+    <div class="rp-sep"></div>
+    <div class="rp-peores-titulo">Puntos más graves</div>
+    <div class="rp-peores" id="rp-peores"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
