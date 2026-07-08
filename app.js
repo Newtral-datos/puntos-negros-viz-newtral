@@ -80,13 +80,6 @@ cargarEstiloBasemap().then(style => {
 
   map.on('load', () => { try {
 
-  // Encaja España peninsular + Canarias en la vista inicial
-  // (padding izquierdo extra para que el panel de búsqueda no las tape)
-  map.fitBounds([[-18.5, 27.3], [4.5, 43.9]], {
-    padding: { top: 70, bottom: 70, left: 370, right: 70 },
-    duration: 0,
-  });
-
   if (usandoBasemapRaster) {
     map.addSource('basemap', {
       type: 'raster',
@@ -169,6 +162,21 @@ cargarEstiloBasemap().then(style => {
 
   mapListo = true;
   comprobarCargaCompleta();
+
+  // Encaja España peninsular + Canarias en la vista inicial. El padding
+  // izquierdo (370px) reserva sitio para el panel de búsqueda en escritorio;
+  // en móvil el panel ocupa el ancho completo, así que ese padding superaría
+  // el ancho del contenedor y fitBounds lanzaría una excepción — de ahí que
+  // vaya en su propio try, al final y sin bloquear el resto de la carga.
+  try {
+    const padLeft = window.innerWidth <= 720 ? 20 : 370;
+    map.fitBounds([[-18.5, 27.3], [4.5, 43.9]], {
+      padding: { top: 70, bottom: 70, left: padLeft, right: 70 },
+      duration: 0,
+    });
+  } catch (err) {
+    console.error('No se pudo encajar la vista inicial:', err);
+  }
 
   } catch (err) {
     console.error('Error inicializando el mapa:', err);
