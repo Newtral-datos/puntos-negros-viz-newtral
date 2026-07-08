@@ -24,6 +24,18 @@ let mostrandoResto = false;
 let restoDisponible = false;
 let map;
 let usandoBasemapRaster = false;
+let mapListo = false;
+let datosListos = false;
+
+/** El overlay de carga cubre tanto la carga de datos como la del mapa: en móvil
+    (redes lentas, dispositivos más lentos) el mapa puede tardar más que los
+    datos, y ocultarlo antes de tiempo dejaba pulsar "Buscar ruta" sin mapa
+    listo, mostrando "El mapa aún se está cargando…". */
+function comprobarCargaCompleta() {
+  if (mapListo && datosListos) {
+    document.getElementById('loading-overlay').classList.add('hidden');
+  }
+}
 
 const muColor = [
   'interpolate', ['linear'], ['get', 'muertos'],
@@ -43,7 +55,10 @@ const CARTO_STYLE_URL = 'https://basemaps.cartocdn.com/gl/positron-gl-style/styl
 
 async function cargarEstiloBasemap() {
   try {
-    const raw = await fetch(CARTO_STYLE_URL).then(r => r.text());
+    // Límite de espera: en redes móviles lentas, sin esto una respuesta que
+    // tarda podía dejar el mapa "cargando" indefinidamente en vez de caer
+    // al raster de reserva.
+    const raw = await fetch(CARTO_STYLE_URL, { signal: AbortSignal.timeout(6000) }).then(r => r.text());
     return JSON.parse(raw.replaceAll('name_en', 'name'));
   } catch (err) {
     console.error('No se pudo cargar el basemap vectorial, uso raster de reserva:', err);
@@ -152,9 +167,15 @@ cargarEstiloBasemap().then(style => {
     if (modoSeleccion) seleccionarUbicacionEnMapa(e.lngLat, modoSeleccion);
   });
 
+  mapListo = true;
+  comprobarCargaCompleta();
+
   } catch (err) {
     console.error('Error inicializando el mapa:', err);
   }});
+}).catch(err => {
+  console.error('No se pudo inicializar el mapa:', err);
+  document.querySelector('#loading-overlay .loading-box').textContent = 'Error cargando el mapa';
 });
 
 /* ══════════════════════════════════════════
@@ -169,7 +190,8 @@ Promise.all([
     CARRETERAS = puntosData.carreteras;
     PROVINCIAS = provinciasData;
     buildGrid();
-    document.getElementById('loading-overlay').classList.add('hidden');
+    datosListos = true;
+    comprobarCargaCompleta();
   })
   .catch(err => {
     console.error('Error cargando datos:', err);
